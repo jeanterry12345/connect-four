@@ -23,10 +23,20 @@ class Agent:
         """Choose the best action using minimax strategy."""
         self.start_time = time.time()
         board = observation
+
+        # Ensure action_mask is valid
+        if action_mask is None:
+            action_mask = [1] * 7
+
         valid = [i for i, v in enumerate(action_mask) if v == 1]
 
+        # If no valid actions, return first available (should not happen)
         if not valid:
-            return 0
+            for i in range(7):
+                if action_mask[i] == 1:
+                    return i
+            return 0  # Fallback, game should be over
+
         if len(valid) == 1:
             return valid[0]
 
@@ -65,7 +75,16 @@ class Agent:
             safe_moves = valid
 
         # 6. Use minimax for remaining decisions
-        return self._search(board, safe_moves)
+        result = self._search(board, safe_moves)
+
+        # Final safety check: ensure returned action is valid
+        if action_mask[result] != 1:
+            for i in valid:
+                if action_mask[i] == 1:
+                    return i
+            return valid[0]
+
+        return result
 
     def _is_winning_move(self, board, col, player, forced_row=None):
         """Check if playing in col wins the game."""
@@ -122,7 +141,10 @@ class Agent:
 
     def _search(self, board, valid):
         """Minimax search with move ordering."""
-        best = valid[0]
+        if not valid:
+            return 0  # Should not happen
+
+        best = valid[0]  # Default to first valid move
         best_score = -99999
 
         # Prefer center columns (better strategic position)
@@ -144,6 +166,10 @@ class Agent:
             if score > best_score:
                 best_score = score
                 best = col
+
+        # Ensure we return a valid move
+        if best not in valid:
+            best = valid[0]
 
         return best
 
