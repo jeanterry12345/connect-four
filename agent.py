@@ -2,12 +2,13 @@ import time
 
 
 class Agent:
+    """Connect Four agent using Minimax with Alpha-Beta pruning."""
 
     def __init__(self, env, player_name=None):
         self.env = env
         self.player_name = player_name
         self.time_limit = 2.5  # time limit with margin
-        self.max_depth = 4
+        self.max_depth = 5
         self.start_time = 0
 
     def choose_action(
@@ -19,9 +20,7 @@ class Agent:
         info=None,
         action_mask=None,
     ):
-        """Choose the best action."""
-        _ = reward, terminated, truncated, info
-
+        """Choose the best action using minimax strategy."""
         self.start_time = time.time()
         board = observation
         valid = [i for i, v in enumerate(action_mask) if v == 1]
@@ -31,29 +30,56 @@ class Agent:
         if len(valid) == 1:
             return valid[0]
 
-        # check if we can win
+        # 1. Win immediately if possible
         for col in valid:
-            if self._can_win(board, col, 0):
+            if self._is_winning_move(board, col, 0):
                 return col
 
-        # block opponent
+        # 2. Block opponent's winning move
         for col in valid:
-            if self._can_win(board, col, 1):
+            if self._is_winning_move(board, col, 1):
                 return col
 
-        # otherwise minimax
-        return self._search(board, valid)
+        # 3. Check for double threat (create two winning opportunities)
+        for col in valid:
+            if self._creates_double_threat(board, col, 0):
+                return col
 
-    def _can_win(self, board, col, player):
+        # 4. Block opponent's double threat
+        for col in valid:
+            if self._creates_double_threat(board, col, 1):
+                return col
+
+        # 5. Avoid moves that give opponent a winning move on top
+        safe_moves = []
+        for col in valid:
+            row = self._get_row(board, col)
+            if row is not None and row > 0:
+                # Check if opponent can win by playing on top
+                if not self._is_winning_move(board, col, 1, row - 1):
+                    safe_moves.append(col)
+            elif row == 0:
+                safe_moves.append(col)
+
+        if not safe_moves:
+            safe_moves = valid
+
+        # 6. Use minimax for remaining decisions
+        return self._search(board, safe_moves)
+
+    def _is_winning_move(self, board, col, player, forced_row=None):
         """Check if playing in col wins the game."""
-        row = self._get_row(board, col)
+        if forced_row is not None:
+            row = forced_row
+        else:
+            row = self._get_row(board, col)
+
         if row is None:
             return False
 
-        # directions: horizontal, vertical, 2 diagonals
-        dirs = [(0, 1), (1, 0), (1, 1), (1, -1)]
+        directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
 
-        for dr, dc in dirs:
+        for dr, dc in directions:
             count = 1
             # forward
             r, c = row + dr, col + dc
@@ -72,12 +98,34 @@ class Agent:
                 return True
         return False
 
+    def _creates_double_threat(self, board, col, player):
+        """Check if move creates two or more winning opportunities."""
+        row = self._get_row(board, col)
+        if row is None:
+            return False
+
+        # Simulate placing the piece
+        board[row, col, player] = 1
+        threats = 0
+
+        # Check all columns for potential winning moves
+        for c in range(7):
+            r = self._get_row(board, c)
+            if r is not None:
+                if self._is_winning_move(board, c, player):
+                    threats += 1
+
+        # Undo the move
+        board[row, col, player] = 0
+
+        return threats >= 2
+
     def _search(self, board, valid):
-        """Simple minimax search."""
+        """Minimax search with move ordering."""
         best = valid[0]
         best_score = -99999
 
-        # prefer center columns
+        # Prefer center columns (better strategic position)
         order = [3, 2, 4, 1, 5, 0, 6]
         sorted_valid = sorted(valid, key=lambda x: order.index(x) if x in order else 7)
 
@@ -85,12 +133,13 @@ class Agent:
             if time.time() - self.start_time > self.time_limit:
                 break
 
-            new_board = board.copy()
             row = self._get_row(board, col)
-            if row is not None:
-                new_board[row, col, 0] = 1
+            if row is None:
+                continue
 
-            score = -self._minimax(new_board, self.max_depth - 1, -99999, 99999, 1)
+            board[row, col, 0] = 1
+            score = -self._minimax(board, self.max_depth - 1, -99999, 99999, 1)
+            board[row, col, 0] = 0
 
             if score > best_score:
                 best_score = score
@@ -103,7 +152,7 @@ class Agent:
         if time.time() - self.start_time > self.time_limit:
             return 0
 
-        # check winner
+        # Check for winner
         if self._has_won(board, 0):
             return 10000 + depth
         if self._has_won(board, 1):
@@ -112,16 +161,22 @@ class Agent:
         valid = [c for c in range(7) if board[0, c, 0] == 0 and board[0, c, 1] == 0]
 
         if not valid or depth <= 0:
-            return self._eval(board)
+            return self._evaluate(board)
+
+        # Move ordering for better pruning
+        order = [3, 2, 4, 1, 5, 0, 6]
+        sorted_valid = sorted(valid, key=lambda x: order.index(x) if x in order else 7)
 
         best = -99999
-        for col in valid:
-            new_board = board.copy()
+        for col in sorted_valid:
             row = self._get_row(board, col)
-            if row is not None:
-                new_board[row, col, player] = 1
+            if row is None:
+                continue
 
-            score = -self._minimax(new_board, depth - 1, -beta, -alpha, 1 - player)
+            board[row, col, player] = 1
+            score = -self._minimax(board, depth - 1, -beta, -alpha, 1 - player)
+            board[row, col, player] = 0
+
             best = max(best, score)
             alpha = max(alpha, score)
 
@@ -130,94 +185,105 @@ class Agent:
 
         return best
 
-    def _eval(self, board):
+    def _evaluate(self, board):
         """Evaluate board position."""
         score = 0
 
-        # center column bonus
+        # Center column bonus (strong strategic position)
+        center_weight = [0, 1, 2, 3, 2, 1, 0]
         for row in range(6):
-            if board[row, 3, 0] == 1:
-                score += 3
-            elif board[row, 3, 1] == 1:
-                score -= 3
+            for col in range(7):
+                if board[row, col, 0] == 1:
+                    score += center_weight[col]
+                elif board[row, col, 1] == 1:
+                    score -= center_weight[col]
 
-        # count alignments
-        score += self._count_score(board, 0)
-        score -= self._count_score(board, 1)
+        # Count potential alignments
+        score += self._count_alignments(board, 0)
+        score -= self._count_alignments(board, 1)
 
         return score
 
-    def _count_score(self, board, player):
-        """Count alignment scores."""
+    def _count_alignments(self, board, player):
+        """Count alignment scores for potential wins."""
         score = 0
         opp = 1 - player
 
-        # horizontal
+        # All directions: horizontal, vertical, diagonal, anti-diagonal
+        directions = [
+            (0, 1, 6, 4),   # horizontal
+            (1, 0, 3, 7),   # vertical
+            (1, 1, 3, 4),   # diagonal
+            (1, -1, 3, 4),  # anti-diagonal (start from col 3)
+        ]
+
+        # Horizontal
         for row in range(6):
             for col in range(4):
-                mine = sum(board[row, col+i, player] for i in range(4))
-                theirs = sum(board[row, col+i, opp] for i in range(4))
-                if theirs == 0:
-                    if mine == 3:
-                        score += 5
-                    elif mine == 2:
-                        score += 2
+                window = [board[row, col + i, player] for i in range(4)]
+                opp_window = [board[row, col + i, opp] for i in range(4)]
+                score += self._score_window(window, opp_window)
 
-        # vertical
+        # Vertical
         for row in range(3):
             for col in range(7):
-                mine = sum(board[row+i, col, player] for i in range(4))
-                theirs = sum(board[row+i, col, opp] for i in range(4))
-                if theirs == 0:
-                    if mine == 3:
-                        score += 5
-                    elif mine == 2:
-                        score += 2
+                window = [board[row + i, col, player] for i in range(4)]
+                opp_window = [board[row + i, col, opp] for i in range(4)]
+                score += self._score_window(window, opp_window)
 
-        # main diagonal
+        # Diagonal
         for row in range(3):
             for col in range(4):
-                mine = sum(board[row+i, col+i, player] for i in range(4))
-                theirs = sum(board[row+i, col+i, opp] for i in range(4))
-                if theirs == 0:
-                    if mine == 3:
-                        score += 5
-                    elif mine == 2:
-                        score += 2
+                window = [board[row + i, col + i, player] for i in range(4)]
+                opp_window = [board[row + i, col + i, opp] for i in range(4)]
+                score += self._score_window(window, opp_window)
 
-        # anti-diagonal
+        # Anti-diagonal
         for row in range(3):
             for col in range(3, 7):
-                mine = sum(board[row+i, col-i, player] for i in range(4))
-                theirs = sum(board[row+i, col-i, opp] for i in range(4))
-                if theirs == 0:
-                    if mine == 3:
-                        score += 5
-                    elif mine == 2:
-                        score += 2
+                window = [board[row + i, col - i, player] for i in range(4)]
+                opp_window = [board[row + i, col - i, opp] for i in range(4)]
+                score += self._score_window(window, opp_window)
 
         return score
 
+    def _score_window(self, window, opp_window):
+        """Score a window of 4 positions."""
+        mine = sum(window)
+        theirs = sum(opp_window)
+
+        if theirs > 0:
+            return 0  # blocked, no potential
+
+        if mine == 3:
+            return 50
+        elif mine == 2:
+            return 10
+        elif mine == 1:
+            return 1
+        return 0
+
     def _has_won(self, board, player):
         """Check if player has won."""
-        # horizontal
+        # Horizontal
         for row in range(6):
             for col in range(4):
-                if all(board[row, col+i, player] == 1 for i in range(4)):
+                if all(board[row, col + i, player] == 1 for i in range(4)):
                     return True
-        # vertical
+        # Vertical
         for row in range(3):
             for col in range(7):
-                if all(board[row+i, col, player] == 1 for i in range(4)):
+                if all(board[row + i, col, player] == 1 for i in range(4)):
                     return True
-        # diagonals
+        # Diagonal
         for row in range(3):
             for col in range(4):
-                if all(board[row+i, col+i, player] == 1 for i in range(4)):
+                if all(board[row + i, col + i, player] == 1 for i in range(4)):
                     return True
+        # Anti-diagonal
         for row in range(3):
             for col in range(3, 7):
-                if all(board[row+i, col-i, player] == 1 for i in range(4)):
+                if all(board[row + i, col - i, player] == 1 for i in range(4)):
                     return True
         return False
 
