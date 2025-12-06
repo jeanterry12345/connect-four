@@ -4,7 +4,7 @@ from .base_agent import BaseAgent
 
 
 class MinimaxAgent(BaseAgent):
-    """Agent utilisant l'algorithme Minimax avec elagage alpha-beta."""
+    """Agent using Minimax algorithm with alpha-beta pruning."""
 
     def __init__(self, name="MinimaxAgent", player_id=None, max_depth=4, time_limit=2.5):
         super().__init__(name=name, player_id=player_id)
@@ -13,37 +13,37 @@ class MinimaxAgent(BaseAgent):
         self._start_time = 0
 
     def select_action(self, observation, action_mask):
-        """Choisit la meilleure action avec minimax."""
+        """Select the best action using minimax."""
         valid = self._get_valid_actions(action_mask)
 
         if not valid:
-            raise ValueError("Pas d'action valide")
+            raise ValueError("No valid action available")
 
         if len(valid) == 1:
             return valid[0]
 
         board = self._observation_to_board(observation)
 
-        # verifier victoire immediate
+        # check for immediate win
         win = self._find_winning_move(board, action_mask, player=1)
         if win != -1:
             return win
 
-        # bloquer adversaire
+        # block opponent
         block = self._find_winning_move(board, action_mask, player=2)
         if block != -1:
             return block
 
-        # recherche minimax
+        # minimax search
         self._start_time = time.time()
         return self._search(board, valid)
 
     def _search(self, board, valid):
-        """Recherche le meilleur coup."""
+        """Search for the best move."""
         best = valid[0]
         best_score = -99999
 
-        # ordre: preferer le centre
+        # order: prefer center columns
         order = [3, 2, 4, 1, 5, 0, 6]
         sorted_valid = sorted(valid, key=lambda x: order.index(x) if x in order else 7)
 
@@ -66,11 +66,11 @@ class MinimaxAgent(BaseAgent):
         return best
 
     def _minimax(self, board, depth, alpha, beta, player):
-        """Minimax avec alpha-beta."""
+        """Minimax with alpha-beta pruning."""
         if time.time() - self._start_time > self.time_limit:
             return 0
 
-        # verifier gagnant
+        # check for winner
         if self._has_won(board, 1):
             return 10000 + depth
         if self._has_won(board, 2):
@@ -100,24 +100,24 @@ class MinimaxAgent(BaseAgent):
         return best
 
     def _evaluate(self, board):
-        """Evalue la position."""
+        """Evaluate the board position."""
         score = 0
 
-        # bonus centre
+        # center bonus
         for row in range(6):
             if board[row, 3] == 1:
                 score += 3
             elif board[row, 3] == 2:
                 score -= 3
 
-        # compter alignements
+        # count alignments
         score += self._count_score(board, 1)
         score -= self._count_score(board, 2)
 
         return score
 
     def _count_score(self, board, player):
-        """Compte les points des alignements."""
+        """Count alignment scores."""
         score = 0
         opp = 3 - player
 
@@ -143,7 +143,7 @@ class MinimaxAgent(BaseAgent):
                     elif mine == 2:
                         score += 2
 
-        # diagonale
+        # diagonal
         for row in range(3):
             for col in range(4):
                 mine = sum(board[row + i, col + i] == player for i in range(4))
@@ -154,7 +154,7 @@ class MinimaxAgent(BaseAgent):
                     elif mine == 2:
                         score += 2
 
-        # anti-diagonale
+        # anti-diagonal
         for row in range(3):
             for col in range(3, 7):
                 mine = sum(board[row + i, col - i] == player for i in range(4))
@@ -168,7 +168,7 @@ class MinimaxAgent(BaseAgent):
         return score
 
     def _has_won(self, board, player):
-        """Verifie si le joueur a gagne."""
+        """Check if player has won."""
         # horizontal
         for row in range(6):
             for col in range(4):
@@ -179,7 +179,7 @@ class MinimaxAgent(BaseAgent):
             for col in range(7):
                 if all(board[row + i, col] == player for i in range(4)):
                     return True
-        # diagonales
+        # diagonals
         for row in range(3):
             for col in range(4):
                 if all(board[row + i, col + i] == player for i in range(4)):
@@ -191,5 +191,5 @@ class MinimaxAgent(BaseAgent):
         return False
 
     def reset(self):
-        """Reset."""
+        """Reset the agent."""
         pass

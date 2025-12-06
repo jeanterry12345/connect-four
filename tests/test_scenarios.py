@@ -1,4 +1,4 @@
-"""Scenarios de test specifiques"""
+"""Specific test scenarios"""
 
 import pytest
 import numpy as np
@@ -7,10 +7,10 @@ from src.utils import check_winner
 
 
 class TestWinningScenarios:
-    """Tests scenarios de victoire"""
+    """Tests for winning scenarios"""
 
     def test_horizontal_win(self):
-        """Victoire horizontale"""
+        """Horizontal win"""
         agent = RuleBasedAgent()
 
         obs = np.zeros((6, 7, 2), dtype=np.int8)
@@ -24,7 +24,7 @@ class TestWinningScenarios:
         assert action == 3
 
     def test_vertical_win(self):
-        """Victoire verticale"""
+        """Vertical win"""
         agent = RuleBasedAgent()
 
         obs = np.zeros((6, 7, 2), dtype=np.int8)
@@ -39,10 +39,10 @@ class TestWinningScenarios:
 
 
 class TestBlockingScenarios:
-    """Tests scenarios de blocage"""
+    """Tests for blocking scenarios"""
 
     def test_block_horizontal(self):
-        """Bloquer horizontal"""
+        """Block horizontal"""
         agent = RuleBasedAgent()
 
         obs = np.zeros((6, 7, 2), dtype=np.int8)
@@ -56,7 +56,7 @@ class TestBlockingScenarios:
         assert action == 3
 
     def test_block_vertical(self):
-        """Bloquer vertical"""
+        """Block vertical"""
         agent = RuleBasedAgent()
 
         obs = np.zeros((6, 7, 2), dtype=np.int8)
@@ -71,29 +71,29 @@ class TestBlockingScenarios:
 
 
 class TestWinConditions:
-    """Tests conditions de victoire"""
+    """Tests for win conditions"""
 
     def test_four_horizontal(self):
-        """4 pions horizontaux"""
+        """4 horizontal pieces"""
         board = np.zeros((6, 7), dtype=np.int8)
         board[5, 0:4] = 1
         assert check_winner(board) == 1
 
     def test_four_vertical(self):
-        """4 pions verticaux"""
+        """4 vertical pieces"""
         board = np.zeros((6, 7), dtype=np.int8)
         board[2:6, 0] = 1
         assert check_winner(board) == 1
 
     def test_four_diagonal(self):
-        """4 pions diagonaux"""
+        """4 diagonal pieces"""
         board = np.zeros((6, 7), dtype=np.int8)
         for i in range(4):
             board[5 - i, i] = 1
         assert check_winner(board) == 1
 
     def test_three_not_win(self):
-        """3 pions ne gagnent pas"""
+        """3 pieces do not win"""
         board = np.zeros((6, 7), dtype=np.int8)
         board[5, 0:3] = 1
         assert check_winner(board) == 0

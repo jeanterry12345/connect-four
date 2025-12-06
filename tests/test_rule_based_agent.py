@@ -1,4 +1,4 @@
-"""Tests pour l'agent base sur regles"""
+"""Tests for rule-based agent"""
 
 import pytest
 import numpy as np
@@ -6,15 +6,15 @@ from src.rule_based_agent import RuleBasedAgent
 
 
 class TestRuleBasedAgent:
-    """Tests pour RuleBasedAgent"""
+    """Tests for RuleBasedAgent"""
 
     def test_init(self):
-        """Test initialisation"""
+        """Test initialization"""
         agent = RuleBasedAgent()
         assert agent.name == "RuleBasedAgent"
 
     def test_wins_when_possible(self):
-        """Test victoire horizontale"""
+        """Test horizontal win"""
         agent = RuleBasedAgent()
 
         obs = np.zeros((6, 7, 2), dtype=np.int8)
@@ -28,7 +28,7 @@ class TestRuleBasedAgent:
         assert action == 3
 
     def test_blocks_opponent(self):
-        """Test blocage adversaire"""
+        """Test blocking opponent"""
         agent = RuleBasedAgent()
 
         obs = np.zeros((6, 7, 2), dtype=np.int8)
@@ -42,7 +42,7 @@ class TestRuleBasedAgent:
         assert action == 3
 
     def test_prefers_center(self):
-        """Test preference centre"""
+        """Test center preference"""
         agent = RuleBasedAgent()
 
         obs = np.zeros((6, 7, 2), dtype=np.int8)
@@ -52,15 +52,15 @@ class TestRuleBasedAgent:
         assert action == 3
 
     def test_win_priority_over_block(self):
-        """Test priorite victoire sur blocage"""
+        """Test win priority over blocking"""
         agent = RuleBasedAgent()
 
         obs = np.zeros((6, 7, 2), dtype=np.int8)
-        # moi: 3 en ligne horizontal
+        # me: 3 in a row horizontal
         obs[5, 0, 0] = 1
         obs[5, 1, 0] = 1
         obs[5, 2, 0] = 1
-        # adversaire: 3 en ligne vertical
+        # opponent: 3 in a row vertical
         obs[5, 6, 1] = 1
         obs[4, 6, 1] = 1
         obs[3, 6, 1] = 1
@@ -68,21 +68,21 @@ class TestRuleBasedAgent:
         mask = np.array([1, 1, 1, 1, 1, 1, 1])
         action = agent.select_action(obs, mask)
 
-        assert action == 3  # gagner plutot que bloquer
+        assert action == 3  # win rather than block
 
 
 class TestHelperMethods:
-    """Tests pour les methodes helper"""
+    """Tests for helper methods"""
 
     def test_get_valid_actions(self):
-        """Test actions valides"""
+        """Test valid actions"""
         agent = RuleBasedAgent()
         mask = np.array([1, 0, 1, 0, 0, 1, 0])
         valid = agent._get_valid_actions(mask)
         assert valid == [0, 2, 5]
 
     def test_get_next_row(self):
-        """Test ligne suivante"""
+        """Test next row"""
         agent = RuleBasedAgent()
         board = np.zeros((6, 7), dtype=np.int8)
 
@@ -92,7 +92,7 @@ class TestHelperMethods:
         assert agent._get_next_row(board, 0) == 4
 
     def test_check_win(self):
-        """Test detection victoire"""
+        """Test win detection"""
         agent = RuleBasedAgent()
         board = np.zeros((6, 7), dtype=np.int8)
         board[5, 0:4] = 1

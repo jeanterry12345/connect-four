@@ -1,8 +1,8 @@
 import numpy as np
 
 
-def print_board(observation, player_names=("Joueur1", "Joueur2")):
-    """Affiche le plateau de jeu."""
+def print_board(observation, player_names=("Player1", "Player2")):
+    """Display the game board."""
     print("\n   0  1  2  3  4  5  6")
     print("  " + "-" * 21)
 
@@ -22,7 +22,7 @@ def print_board(observation, player_names=("Joueur1", "Joueur2")):
 
 
 def print_board_simple(board):
-    """Affiche un plateau simple (6x7)."""
+    """Display a simple board (6x7)."""
     symbols = {0: '.', 1: 'X', 2: 'O'}
 
     print("\n   0  1  2  3  4  5  6")
@@ -39,12 +39,12 @@ def print_board_simple(board):
 
 
 def get_valid_actions(action_mask):
-    """Retourne les colonnes jouables."""
+    """Return playable columns."""
     return [i for i, v in enumerate(action_mask) if v == 1]
 
 
 def get_next_row(board, col):
-    """Trouve ou tombe le pion."""
+    """Find where the piece will land."""
     for row in range(5, -1, -1):
         if board[row, col] == 0:
             return row
@@ -52,7 +52,7 @@ def get_next_row(board, col):
 
 
 def check_winner(board):
-    """Verifie s'il y a un gagnant. Retourne 1, 2, ou 0."""
+    """Check if there is a winner. Returns 1, 2, or 0."""
     # horizontal
     for row in range(6):
         for col in range(4):
@@ -69,7 +69,7 @@ def check_winner(board):
                 if all(board[row + i, col] == player for i in range(4)):
                     return player
 
-    # diagonale
+    # diagonal
     for row in range(3):
         for col in range(4):
             player = board[row, col]
@@ -77,7 +77,7 @@ def check_winner(board):
                 if all(board[row + i, col + i] == player for i in range(4)):
                     return player
 
-    # anti-diagonale
+    # anti-diagonal
     for row in range(3):
         for col in range(3, 7):
             player = board[row, col]
@@ -89,12 +89,12 @@ def check_winner(board):
 
 
 def is_board_full(board):
-    """Verifie si le plateau est plein."""
+    """Check if the board is full."""
     return np.all(board[0, :] != 0)
 
 
 def observation_to_board(observation, current_player):
-    """Convertit observation PettingZoo en plateau."""
+    """Convert PettingZoo observation to board."""
     board = np.zeros((6, 7), dtype=np.int8)
     board[observation[:, :, 0] == 1] = current_player
     opponent = 3 - current_player
@@ -103,7 +103,7 @@ def observation_to_board(observation, current_player):
 
 
 def board_to_observation(board, current_player):
-    """Convertit plateau en observation PettingZoo."""
+    """Convert board to PettingZoo observation."""
     obs = np.zeros((6, 7, 2), dtype=np.int8)
     opponent = 3 - current_player
     obs[:, :, 0] = (board == current_player).astype(np.int8)
@@ -112,7 +112,7 @@ def board_to_observation(board, current_player):
 
 
 def evaluate_position(board, player):
-    """Evalue la position pour un joueur."""
+    """Evaluate board position for a player."""
     opponent = 3 - player
 
     winner = check_winner(board)
@@ -123,7 +123,7 @@ def evaluate_position(board, player):
 
     score = 0
 
-    # bonus centre
+    # center bonus
     for row in range(6):
         if board[row, 3] == player:
             score += 3

@@ -9,7 +9,7 @@ from src.random_agent import RandomAgent
 
 
 def run_game(agent1, agent2):
-    """Execute une partie."""
+    """Run a game."""
     env = connect_four_v3.env()
     env.reset()
 
@@ -39,9 +39,9 @@ def run_game(agent1, agent2):
 
 
 def main():
-    """Analyse principale."""
+    """Main analysis."""
     print("=" * 50)
-    print("Analyse agents aleatoires")
+    print("Random Agents Analysis")
     print("=" * 50)
 
     num_games = 100
@@ -59,25 +59,25 @@ def main():
         all_moves.append(moves)
 
         if (i + 1) % 20 == 0:
-            print(f"{i + 1}/{num_games} parties...")
+            print(f"{i + 1}/{num_games} games...")
 
     elapsed = time.time() - start
 
-    # Resultats
-    print(f"\n[Resultats sur {num_games} parties]")
-    print(f"Joueur 1 gagne: {stats['player_0']} ({stats['player_0']/num_games*100:.1f}%)")
-    print(f"Joueur 2 gagne: {stats['player_1']} ({stats['player_1']/num_games*100:.1f}%)")
-    print(f"Egalites: {stats['draw']} ({stats['draw']/num_games*100:.1f}%)")
+    # Results
+    print(f"\n[Results over {num_games} games]")
+    print(f"Player 1 wins: {stats['player_0']} ({stats['player_0']/num_games*100:.1f}%)")
+    print(f"Player 2 wins: {stats['player_1']} ({stats['player_1']/num_games*100:.1f}%)")
+    print(f"Draws: {stats['draw']} ({stats['draw']/num_games*100:.1f}%)")
 
-    print(f"\n[Statistiques coups]")
-    print(f"Moyenne: {np.mean(all_moves):.1f}")
+    print(f"\n[Move Statistics]")
+    print(f"Average: {np.mean(all_moves):.1f}")
     print(f"Min: {np.min(all_moves)}, Max: {np.max(all_moves)}")
 
-    print(f"\n[Temps]")
+    print(f"\n[Time]")
     print(f"Total: {elapsed:.2f}s")
-    print(f"Par partie: {elapsed/num_games*1000:.2f}ms")
+    print(f"Per game: {elapsed/num_games*1000:.2f}ms")
 
-    print("\nAnalyse terminee!")
+    print("\nAnalysis complete!")
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from .base_agent import BaseAgent
 
 
 class MCTSNode:
-    """Noeud de l'arbre MCTS."""
+    """Node in the MCTS tree."""
 
     def __init__(self, parent=None, action=None, player=1, valid_actions=None):
         self.parent = parent
@@ -21,22 +21,22 @@ class MCTSNode:
         return len(self.untried) == 0
 
     def ucb1(self, c=1.414):
-        """Calcule la valeur UCB1."""
+        """Calculate UCB1 value."""
         if self.visits == 0:
             return float('inf')
         return self.wins / self.visits + c * math.sqrt(math.log(self.parent.visits) / self.visits)
 
     def best_child(self, c=1.414):
-        """Retourne le meilleur enfant selon UCB1."""
+        """Return the best child according to UCB1."""
         return max(self.children.values(), key=lambda n: n.ucb1(c))
 
     def best_action(self):
-        """Retourne l'action la plus visitee."""
+        """Return the most visited action."""
         return max(self.children.keys(), key=lambda a: self.children[a].visits)
 
 
 class MCTSAgent(BaseAgent):
-    """Agent utilisant Monte Carlo Tree Search."""
+    """Agent using Monte Carlo Tree Search."""
 
     def __init__(self, name="MCTSAgent", player_id=None, time_limit=2.5, max_iter=100000):
         super().__init__(name=name, player_id=player_id)
@@ -44,23 +44,23 @@ class MCTSAgent(BaseAgent):
         self.max_iter = max_iter
 
     def select_action(self, observation, action_mask):
-        """Choisit une action avec MCTS."""
+        """Select an action using MCTS."""
         valid = self._get_valid_actions(action_mask)
 
         if not valid:
-            raise ValueError("Pas d'action valide")
+            raise ValueError("No valid action available")
 
         if len(valid) == 1:
             return valid[0]
 
         board = self._observation_to_board(observation)
 
-        # victoire immediate?
+        # immediate win?
         win = self._find_winning_move(board, action_mask, player=1)
         if win != -1:
             return win
 
-        # bloquer?
+        # block opponent?
         block = self._find_winning_move(board, action_mask, player=2)
         if block != -1:
             return block
@@ -68,7 +68,7 @@ class MCTSAgent(BaseAgent):
         return self._mcts(board, valid)
 
     def _mcts(self, board, valid):
-        """Execute la recherche MCTS."""
+        """Execute MCTS search."""
         root = MCTSNode(player=1, valid_actions=valid)
         start = time.time()
         iterations = 0
@@ -86,7 +86,7 @@ class MCTSAgent(BaseAgent):
             # simulation
             result = self._simulate(sim_board, node.player)
 
-            # backprop
+            # backpropagation
             self._backprop(node, result)
 
             iterations += 1
@@ -96,7 +96,7 @@ class MCTSAgent(BaseAgent):
         return valid[len(valid) // 2]
 
     def _select(self, node, board):
-        """Selection: descend dans l'arbre."""
+        """Selection: descend through the tree."""
         while node.is_fully_expanded() and node.children:
             node = node.best_child()
             row = self._get_next_row(board, node.action)
@@ -107,7 +107,7 @@ class MCTSAgent(BaseAgent):
         return node
 
     def _expand(self, node, board):
-        """Expansion: ajoute un enfant."""
+        """Expansion: add a child node."""
         action = node.untried.pop()
         row = self._get_next_row(board, action)
         if row != -1:
@@ -119,7 +119,7 @@ class MCTSAgent(BaseAgent):
         return child
 
     def _simulate(self, board, player):
-        """Simulation: partie aleatoire."""
+        """Simulation: random playout."""
         while True:
             winner = self._check_winner(board)
             if winner == 1:
@@ -131,7 +131,7 @@ class MCTSAgent(BaseAgent):
             if not valid:
                 return 0
 
-            # jouer intelligemment
+            # play smart move
             action = self._smart_action(board, valid, player)
             row = self._get_next_row(board, action)
             if row == -1:
@@ -142,8 +142,8 @@ class MCTSAgent(BaseAgent):
         return 0
 
     def _smart_action(self, board, valid, player):
-        """Choisit un coup intelligent."""
-        # gagner?
+        """Choose a smart action."""
+        # can we win?
         for col in valid:
             row = self._get_next_row(board, col)
             if row != -1:
@@ -153,7 +153,7 @@ class MCTSAgent(BaseAgent):
                     return col
                 board[row, col] = 0
 
-        # bloquer?
+        # block opponent?
         opp = 3 - player
         for col in valid:
             row = self._get_next_row(board, col)
@@ -167,7 +167,7 @@ class MCTSAgent(BaseAgent):
         return random.choice(valid)
 
     def _backprop(self, node, result):
-        """Backpropagation."""
+        """Backpropagation: update node statistics."""
         while node is not None:
             node.visits += 1
             if node.player == 1:
@@ -183,7 +183,7 @@ class MCTSAgent(BaseAgent):
             node = node.parent
 
     def _check_winner(self, board):
-        """Verifie le gagnant."""
+        """Check for a winner."""
         for row in range(6):
             for col in range(4):
                 p = board[row, col]
@@ -211,7 +211,7 @@ class MCTSAgent(BaseAgent):
         return 0
 
     def _check_win_pos(self, board, row, col, player):
-        """Verifie victoire depuis une position."""
+        """Check for win from a position."""
         dirs = [(0, 1), (1, 0), (1, 1), (1, -1)]
         for dr, dc in dirs:
             count = 1
@@ -230,11 +230,11 @@ class MCTSAgent(BaseAgent):
         return False
 
     def _is_terminal(self, board):
-        """Etat terminal?"""
+        """Check if terminal state."""
         if self._check_winner(board) != 0:
             return True
         return np.all(board[0, :] != 0)
 
     def reset(self):
-        """Reset."""
+        """Reset the agent."""
         pass

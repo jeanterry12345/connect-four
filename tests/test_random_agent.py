@@ -1,4 +1,4 @@
-"""Tests pour l'agent aleatoire"""
+"""Tests for random agent"""
 
 import pytest
 import numpy as np
@@ -6,15 +6,15 @@ from src.random_agent import RandomAgent
 
 
 class TestRandomAgent:
-    """Tests basiques pour RandomAgent"""
+    """Basic tests for RandomAgent"""
 
     def test_init(self):
-        """Test initialisation"""
+        """Test initialization"""
         agent = RandomAgent()
         assert agent.name == "RandomAgent"
 
     def test_select_valid_action(self):
-        """Test selection d'une action valide"""
+        """Test selection of a valid action"""
         agent = RandomAgent()
         obs = np.zeros((6, 7, 2), dtype=np.int8)
         mask = np.array([1, 1, 1, 1, 1, 1, 1])
@@ -23,7 +23,7 @@ class TestRandomAgent:
         assert 0 <= action <= 6
 
     def test_respects_mask(self):
-        """Test que le masque est respecte"""
+        """Test that mask is respected"""
         agent = RandomAgent()
         obs = np.zeros((6, 7, 2), dtype=np.int8)
         mask = np.array([0, 1, 0, 1, 0, 1, 0])
@@ -33,7 +33,7 @@ class TestRandomAgent:
             assert action in [1, 3, 5]
 
     def test_no_valid_action_error(self):
-        """Test erreur si pas d'action valide"""
+        """Test error when no valid action"""
         agent = RandomAgent()
         obs = np.zeros((6, 7, 2), dtype=np.int8)
         mask = np.array([0, 0, 0, 0, 0, 0, 0])
@@ -42,7 +42,7 @@ class TestRandomAgent:
             agent.select_action(obs, mask)
 
     def test_seed_reproducibility(self):
-        """Test reproductibilite avec seed"""
+        """Test reproducibility with seed"""
         obs = np.zeros((6, 7, 2), dtype=np.int8)
         mask = np.array([1, 1, 1, 1, 1, 1, 1])
 

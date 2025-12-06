@@ -8,7 +8,7 @@ from src.utils import print_board
 
 
 def create_agent(agent_type, player_id):
-    """Cree un agent selon le type."""
+    """Create an agent based on type."""
     if agent_type == "random":
         return RandomAgent(name="RandomAgent", player_id=player_id)
     elif agent_type == "rule":
@@ -22,37 +22,37 @@ def create_agent(agent_type, player_id):
     elif agent_type == "human":
         return None
     else:
-        raise ValueError(f"Type d'agent inconnu: {agent_type}")
+        raise ValueError(f"Unknown agent type: {agent_type}")
 
 
 def get_human_action(action_mask):
-    """Obtient l'action du joueur humain."""
+    """Get action from human player."""
     valid = [i for i, v in enumerate(action_mask) if v == 1]
 
     while True:
         try:
-            action = int(input(f"Choisir une colonne {valid}: "))
+            action = int(input(f"Choose a column {valid}: "))
             if action in valid:
                 return action
-            print(f"Choix invalide, choisir parmi {valid}")
+            print(f"Invalid choice, choose from {valid}")
         except ValueError:
-            print("Entrer un nombre valide")
+            print("Enter a valid number")
         except KeyboardInterrupt:
-            print("\nPartie interrompue")
+            print("\nGame interrupted")
             sys.exit(0)
 
 
 def run_game(agent1, agent2, verbose=True):
-    """Execute une partie."""
+    """Run a game."""
     env = connect_four_v3.env()
     env.reset()
 
     agents = {"player_0": agent1, "player_1": agent2}
 
     if verbose:
-        print("\nPartie lancee!")
-        print(f"Joueur 0 (X): {agent1.name if agent1 else 'Humain'}")
-        print(f"Joueur 1 (O): {agent2.name if agent2 else 'Humain'}")
+        print("\nGame started!")
+        print(f"Player 0 (X): {agent1.name if agent1 else 'Human'}")
+        print(f"Player 1 (O): {agent2.name if agent2 else 'Human'}")
 
     move = 0
     for name in env.agent_iter():
@@ -60,24 +60,24 @@ def run_game(agent1, agent2, verbose=True):
 
         if done or trunc:
             if verbose:
-                print("\nPlateau final:")
+                print("\nFinal board:")
                 print_board(obs["observation"])
 
                 if reward == 1:
-                    print(f"\n{name} gagne!")
+                    print(f"\n{name} wins!")
                 elif reward == -1:
                     winner = "player_1" if name == "player_0" else "player_0"
-                    print(f"\n{winner} gagne!")
+                    print(f"\n{winner} wins!")
                 else:
-                    print("\nMatch nul!")
+                    print("\nDraw!")
 
             env.step(None)
             break
 
         if verbose:
-            print(f"\nCoup {move + 1}")
+            print(f"\nMove {move + 1}")
             print_board(obs["observation"])
-            print(f"Tour: {name}")
+            print(f"Turn: {name}")
 
         agent = agents[name]
         if agent is None:
@@ -85,7 +85,7 @@ def run_game(agent1, agent2, verbose=True):
         else:
             action = agent.select_action(obs["observation"], obs["action_mask"])
             if verbose:
-                print(f"{agent.name} joue colonne {action}")
+                print(f"{agent.name} plays column {action}")
 
         env.step(action)
         move += 1
@@ -94,8 +94,8 @@ def run_game(agent1, agent2, verbose=True):
 
 
 def main():
-    """Fonction principale."""
-    parser = argparse.ArgumentParser(description="Puissance 4")
+    """Main function."""
+    parser = argparse.ArgumentParser(description="Connect Four")
     parser.add_argument("--player1", type=str, default="rule",
                         choices=["random", "rule", "minimax", "mcts", "human"])
     parser.add_argument("--player2", type=str, default="random",
@@ -106,7 +106,7 @@ def main():
     args = parser.parse_args()
 
     print("\n" + "=" * 40)
-    print("Puissance 4")
+    print("Connect Four")
     print("=" * 40)
 
     agent1 = create_agent(args.player1, "player_0")
@@ -116,9 +116,9 @@ def main():
         run_game(agent1, agent2, verbose=not args.quiet)
     else:
         for i in range(args.games):
-            print(f"\nPartie {i + 1}...")
+            print(f"\nGame {i + 1}...")
             run_game(agent1, agent2, verbose=False)
-        print(f"\n{args.games} parties terminees!")
+        print(f"\n{args.games} games completed!")
 
 
 if __name__ == "__main__":

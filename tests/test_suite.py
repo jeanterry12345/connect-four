@@ -1,4 +1,4 @@
-"""Suite de tests complete"""
+"""Complete test suite"""
 
 import pytest
 import time
@@ -11,10 +11,10 @@ from src.utils import check_winner, get_next_row, get_valid_actions
 
 
 class TestGameMechanics:
-    """Tests mecaniques de jeu"""
+    """Tests for game mechanics"""
 
     def test_valid_actions(self):
-        """Test actions valides"""
+        """Test valid actions"""
         mask = np.array([1, 1, 1, 1, 1, 1, 1])
         assert get_valid_actions(mask) == [0, 1, 2, 3, 4, 5, 6]
 
@@ -22,7 +22,7 @@ class TestGameMechanics:
         assert get_valid_actions(mask) == [0, 2, 4, 6]
 
     def test_piece_placement(self):
-        """Test placement pions"""
+        """Test piece placement"""
         board = np.zeros((6, 7), dtype=np.int8)
         assert get_next_row(board, 0) == 5
 
@@ -30,17 +30,17 @@ class TestGameMechanics:
         assert get_next_row(board, 0) == 4
 
     def test_win_detection(self):
-        """Test detection victoire"""
+        """Test win detection"""
         board = np.zeros((6, 7), dtype=np.int8)
         board[5, 0:4] = 1
         assert check_winner(board) == 1
 
 
 class TestPerformance:
-    """Tests de performance"""
+    """Performance tests"""
 
     def test_random_agent_speed(self):
-        """Test vitesse agent random"""
+        """Test random agent speed"""
         agent = RandomAgent()
         obs = np.zeros((6, 7, 2), dtype=np.int8)
         mask = np.array([1, 1, 1, 1, 1, 1, 1])
@@ -50,10 +50,10 @@ class TestPerformance:
             agent.select_action(obs, mask)
         elapsed = time.time() - start
 
-        assert elapsed < 1.0  # 100 decisions en moins d'1 seconde
+        assert elapsed < 1.0  # 100 decisions in less than 1 second
 
     def test_rule_agent_speed(self):
-        """Test vitesse agent regles"""
+        """Test rule agent speed"""
         agent = RuleBasedAgent()
         obs = np.zeros((6, 7, 2), dtype=np.int8)
         mask = np.array([1, 1, 1, 1, 1, 1, 1])
@@ -67,10 +67,10 @@ class TestPerformance:
 
 
 class TestStrategy:
-    """Tests de strategie"""
+    """Strategy tests"""
 
     def test_rule_vs_random_winrate(self):
-        """Test taux de victoire"""
+        """Test win rate"""
         wins = 0
         games = 20
 
@@ -99,21 +99,21 @@ class TestStrategy:
 
             env.close()
 
-            # le dernier reward indique qui a gagne
+            # the last reward indicates who won
             if reward == 1 and name == "player_0":
                 wins += 1
             elif reward == -1 and name == "player_1":
                 wins += 1
 
         winrate = wins / games
-        assert winrate > 0.5  # doit gagner plus de 50%
+        assert winrate > 0.5  # must win more than 50%
 
 
 class TestIntegration:
-    """Tests d'integration"""
+    """Integration tests"""
 
     def test_full_game(self):
-        """Test partie complete"""
+        """Test full game"""
         env = connect_four_v3.env()
         env.reset()
 
